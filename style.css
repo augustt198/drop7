@@ -1,0 +1,42 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+
+    background-color: #666666;
+}
+
+#container {
+    margin-top: 50px;
+    width: 50vw;
+    height: 50vw;
+    margin-left: auto;
+    margin-right: auto;
+    color: white;
+}
+
+table {
+    border-collapse: collapse;
+    border: 1px solid #666666;
+    position: absolute;
+    width: 50%;
+    table-layout: fixed;
+
+    padding-bottom: 50%;
+    height: 50vw;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+td {
+    border: 1px solid #666666;
+}
+
+/* SVG STYLING */
+
+rect {
+    cursor: pointer;
+}
