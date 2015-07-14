@@ -40,3 +40,8 @@ td {
 rect {
     cursor: pointer;
 }
+
+#score {
+    font-family: 'Helvetica Neue';
+    font-weight: lighter;
+}
