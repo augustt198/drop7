@@ -18,6 +18,45 @@ function createGrid(hardcore) {
     return grid;
 }
 
+function testDisc1Disappearing(grid, x, y) {
+    var xNeighbors = (x - 1 < 0 || grid[x - 1][y] === undefined) &&
+            (x + 1 > 6 || grid[x + 1][y] === undefined);
+
+    var yNeighbors = (y + 1 > 6) && (grid[x][y - 1] === undefined);
+    return xNeighbors || yNeighbors;
+}
+
+function getDisappearing(grid) {
+    var ret = {};
+    for (var x = 0; x < grid.length; x++) {
+        var y = 0;
+        // get "peek"
+        for (; y < grid[0].length && grid[x][y] === undefined; y++);
+
+        if (y == grid[0].length)
+            continue;
+
+        for (var y2 = y; y2 < grid.length; y2++) {
+            var disc = grid[x][y2];
+            // console.log("got disc " + disc);
+            if (disc == 0 && testDisc1Disappearing(grid, x, y2)) {
+                var key = x+","+y2+"-"+x+","+y2;
+                ret[key] = [[x, y2]];
+            } else if (disc == 6 - y) {
+                var key = x+","+y+"-"+x+","+(grid[0].length-1);
+                var v   = [[x, y2]];
+                ret[key] ? ret[key].push(v) : (ret[key] = v);
+            }
+
+            var lX = 0;
+            // TODO
+        }
+
+
+    }
+    return ret;
+}
+
 function findRows(grid) {
     var any = false;
     for (var x = 0; x < grid.length; x++) {
@@ -119,27 +158,29 @@ function populatePaper(grid, paper) {
     return images;
 }
 
-function columnClicked(col) {
+function columnClicked(idx, hoverInFunc) {
+    var oldX = currentDiscImg.attr('x');
     var targetY = 0;
     for (; targetY < grid[0].length; targetY++) {
-        if (grid[col][targetY] !== undefined) {
+        if (grid[idx][targetY] !== undefined) {
             break;
         }
     }
     targetY--;
 
-    currentDiscImg.animate({y: 100.5 * targetY}, 60 * targetY, undefined, function() {
+    currentDiscImg.animate({y: 100.5 * targetY}, 400, "ease-in", function() {
         currentDisc = Math.floor(Math.random() * 7);
         var url = "svg/disc" + (currentDisc + 1) + ".svg"
-        currentDiscImg = paper.image(url, 303, -100, 95, 95);
+        currentDiscImg = paper.image(url, oldX, -100, 95, 95);
 
-        // findRows(grid);
+        findRows(grid);
         // applyGravity(grid);
+        hoverInFunc();
     });
 
-    images[col][targetY] = currentDiscImg;
-    grid[col][targetY] = currentDisc;
-    console.log("set " + col + ", " + targetY + " = " + currentDisc);
+    images[idx][targetY] = currentDiscImg;
+    grid[idx][targetY] = currentDisc;
+    console.log("set " + idx + ", " + targetY + " = " + currentDisc);
     currentDiscImg = null;
 }
 
@@ -148,27 +189,41 @@ paper.setViewBox(0, 0, 700, 700, true);
 paper.setSize('100%', '130%');
 
 var img;
+var backgroundSlots     = new Array(7);
+var backgroundColumns   = new Array(7);
 
-var cols = {};
 
 for (var i = 0; i <= 6; i++) {
+    backgroundSlots[i] = new Array(7);
+    for (var j = 0; j <= 6; j++) {
+        var rect = paper.rect(i * 100, j * 100, 100, 100)
+            .attr('fill', '#000');
+
+        backgroundSlots[i][j] = rect;
+    }
+
     col = paper.rect(i * 100, 0, 100, 700)
-        .attr('fill', '#000');
+        .attr('fill', '#000')
+        .attr('opacity', 0.0);
+
     (function (c, idx) {
-        c.hover(function() { // hover in
-            c.attr('fill', '#262626');
+        var hoverOut = function() { // hover out
+            c.attr('fill', '#000').attr('opacity', 0.0);
+        };
+        var hoverIn = function() {
+            c.attr('fill', '#262626').attr('opacity', 1.0);
             if (currentDiscImg != null) {
-                currentDiscImg.attr('x', 3 + 100 * idx);
+                currentDiscImg.animate({'x': 3 + 100 * idx}, 75);
             }
-        }, function() { // hover out
-            c.attr('fill', '#000');
-        });
+        }
+
+        c.hover(hoverIn, hoverOut);
 
         c.click(function() {
-            columnClicked(idx);
+            hoverOut();
+            columnClicked(idx, hoverIn);
         })
     })(col, i);
-    cols[col.id] = i;
 }
 
 for (var i = 1; i <= 6; i++) {
