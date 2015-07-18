@@ -58,9 +58,6 @@ function columnClick(column, index) {
     dropped.image.animate({x: 101 * index, y: 101 * y}, 400);
 
     GRID[index][y] = dropped.number;
-    console.log(index, " ", y);
-
-    console.log(getDisappearing());
 }
 
 function drawBoard() {
@@ -165,10 +162,8 @@ function getDisappearing() {
         if (y == GRID[0].length)
             continue;
 
-        console.log("PEAK = " + y);
         for (var y2 = GRID.length - 1; y2 >= y; y2--) {
             var disc = GRID[x][y2];
-            // console.log("got disc " + disc);
             if (disc == 0 && testDisc1Disappearing(GRID, x, y2)) {
                 var key = packCoordinate(x, y2, x, y2);
                 ret[key] = [[x, y2]];
@@ -178,13 +173,11 @@ function getDisappearing() {
                 ret[key] ? ret[key].push(v) : (ret[key] = [v]);
             }
 
-            console.log("current vs highest", y2, highestHSweepY, lastHSweepX == x - 1);
             if (y2 >= highestHSweepY && lastHSweepX == x - 1) {
                 continue;
             }
 
             var lenX = 1;
-            console.log("starting at ", x, y2);
             for (var x2 = x + 1; x2 < GRID.length; x2++) {
                 if (GRID[x2][y2] === undefined) {
                     break;
@@ -192,7 +185,6 @@ function getDisappearing() {
                     lenX++;
                 }
             }
-            console.log("len is " + lenX);
 
             if (lenX > 1 && lastHSweepX != x) {
                 lastHSweepX = x;
@@ -201,15 +193,12 @@ function getDisappearing() {
 
             for (var x2 = x; x2 < x + lenX; x2++) {
                 if (GRID[x2][y2] != 0 && GRID[x2][y2] == lenX - 1) {
-                    console.log("Match at ", x2, y2, "because len is", lenX, "and the val is", GRID[x2][y2]);
                     var key = packCoordinate(x, y2, x + lenX - 1, y2);
                     var v   = [x2, y2];
                     ret[key] ? ret[key].push(v) : (ret[key] = [v]);
                 }
             }
         }
-
-        console.log("adjust? " +(y <= highestHSweepY && x - 1 == lastHSweepX));
         if (y <= highestHSweepY && x - 1 == lastHSweepX) {
             highestHSweepY = y;
             lastHSweepX++;
@@ -341,7 +330,6 @@ function columnClicked(idx, hoverInFunc) {
 
     images[idx][targetY] = currentDiscImg;
     grid[idx][targetY] = currentDisc;
-    console.log("set " + idx + ", " + targetY + " = " + currentDisc);
     currentDiscImg = null;
 }
 
