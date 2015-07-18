@@ -35,13 +35,17 @@ td {
     border: 1px solid #666666;
 }
 
+#score {
+    font-family: 'Helvetica Neue';
+    font-weight: lighter;
+}
+
 /* SVG STYLING */
 
 rect {
     cursor: pointer;
 }
 
-#score {
-    font-family: 'Helvetica Neue';
-    font-weight: lighter;
+path, image {
+    pointer-events: none;
 }
