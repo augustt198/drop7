@@ -65,15 +65,15 @@ function columnClick(column, index) {
     if (CURRENT_DISC == null)
         return;
 
-    var dropped = CURRENT_DISC;
-    CURRENT_DISC = null;
-
     var y = 0;
     for (y = 0; y < GRID[index].length && GRID[index][y] === undefined; y++);
     y--;
     if (y < 0) {
         return;
     }
+
+    var dropped = CURRENT_DISC;
+    CURRENT_DISC = null;
 
     GRID[index][y] = dropped.number;
     IMAGES[index][y] = dropped.image;
