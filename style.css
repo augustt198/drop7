@@ -37,7 +37,9 @@ td {
 
 #score {
     font-family: 'Helvetica Neue';
-    font-weight: lighter;
+    font-weight: 100;
+    font-size: 5vw;
+    text-align: right;
 }
 
 /* SVG STYLING */
@@ -46,6 +48,6 @@ rect {
     cursor: pointer;
 }
 
-path, image {
+path, image, text, .square {
     pointer-events: none;
 }
