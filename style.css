@@ -5,13 +5,13 @@ body, html {
     height: 100%;
     width: 100%;
 
-    background-color: #666666;
+    background-color: #5e5e5e;
 }
 
 #container {
-    margin-top: 50px;
-    width: 50vw;
-    height: 50vw;
+    position: relative;
+    height: 70vmin;
+    width: 70vmin;
     margin-left: auto;
     margin-right: auto;
     color: white;
@@ -19,7 +19,7 @@ body, html {
 
 table {
     border-collapse: collapse;
-    border: 1px solid #666666;
+    border: 1px solid #5e5e5e;
     position: absolute;
     width: 50%;
     table-layout: fixed;
@@ -32,14 +32,17 @@ table {
 }
 
 td {
-    border: 1px solid #666666;
+    border: 1px solid #5e5e5e;
 }
 
 #score {
     font-family: 'Helvetica Neue';
     font-weight: 100;
-    font-size: 5vw;
-    text-align: right;
+    font-size: 5vmin;
+
+    position: absolute;
+    right: 0;
+    margin-top: 0.3em;
 }
 
 /* SVG STYLING */

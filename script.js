@@ -1,6 +1,6 @@
 var PAPER = Raphael("container")
             .setViewBox(0, 0, 700, 700, true)
-            .setSize('100%', '130%');
+            .setSize('100%', '150%');
 
 {
     var scoreNode = document.createElement("H1");
@@ -19,6 +19,7 @@ var IMAGES;
 var CURRENT_DISC;
 var CURRENT_COLUMN = 3;
 
+var CHAIN_TEXT;
 
 const DISC_X_INC = 101;
 
@@ -31,6 +32,13 @@ const COLOR_MAP = {
     6: "#21bcee",
     7: "#4556a6"
 };
+
+const MOVES_PER_LEVEL   = 5;
+var MOVES_LEFT          = 5;
+var CURRENT_LEVEL       = 1;
+
+var LEVEL_INDICATORS;
+var LEVEL_TEXT;
 
 
 function createGrid() {
@@ -78,16 +86,36 @@ function columnClick(column, index) {
     GRID[index][y] = dropped.number;
     IMAGES[index][y] = dropped.image;
 
-    dropped.image.animate({x: 101 * index, y: 101 * y}, 400, "easeIn", function() {
+    dropped.image.animate({x: 101 * index, y: 101 * y}, 200 + 50 * y, "easeIn", function() {
         drawUpdates(1, function() {
+            if (CHAIN_TEXT !== undefined) {
+                CHAIN_TEXT.animate({opacity: 0}, 2500, CHAIN_TEXT.remove);
+                CHAIN_TEXT = undefined;
+            }
+
             addDisc();
+
+            return; // TODO fix levels
+            MOVES_LEFT--;
+
+            if (MOVES_LEFT < 1) {
+                for (var x = 0; x < GRID.length; x++) {
+                    for (var y = 0; y < GRID[x].length; y++) {
+                        if (IMAGES[x][y] !== undefined) {
+                            IMAGES[x][y].attr("y", IMAGES[x][y].attr("y") - 100.5);
+                        }
+                    }
+                }
+            }
+
+            LEVEL_INDICATORS[MOVES_LEFT].attr("fill", "#808080");
         });
     });
 }
 
 function drawUpdates(chainLen, finishCallback) {
-    console.log("chainlen = " + chainLen);
     var update = getDisappearing();
+    console.log(update);
     if (Object.keys(update[1]).length < 1) {
         finishCallback();
         return;
@@ -130,6 +158,19 @@ function drawUpdates(chainLen, finishCallback) {
             chainDelay(function() {
                 IMAGES[x][y].animate({transform: 's0', opacity: 0}, 500);
             }, 180);
+
+            if (chainLen > 1) {
+                if (CHAIN_TEXT !== undefined) {
+                    CHAIN_TEXT.attr("text", "CHAIN x" + chainLen);
+                } else {
+                    CHAIN_TEXT = PAPER.text(90, -30, "CHAIN x" + chainLen).attr({
+                        "fill": "white",
+                        "font-family": "Helvetica",
+                        "font-size": 40,
+                        "text-align": "left"
+                    });
+                }
+            }
         });
     }, 300);
 }
@@ -169,11 +210,11 @@ function drawBoard() {
         var px = i * 100;
         var pathString = "M"+px+",0L"+px+",700";
         var path = PAPER.path(pathString);
-        path.attr({"stroke": "#666666", "stroke-width": 2});
+        path.attr({"stroke": "#5e5e5e", "stroke-width": 2});
 
         var pathString = "M0,"+px+"L700,"+px;
         var path = PAPER.path(pathString);
-        path.attr({"stroke": "#666666", "stroke-width": 2});
+        path.attr({"stroke": "#5e5e5e", "stroke-width": 2});
     }
 }
 
@@ -259,23 +300,16 @@ function getDisappearing() {
 
 
             var lenX = 0;
-            var rXbound;
-            for (var x2 = x + 1; x2 < GRID.length; x2++) {
-                if (GRID[x2][y2] === undefined) {
-                    rXbound = x2 - 1;
-                    break;
-                } else {
-                    lenX++;
-                }
+            var rXbound = x;
+            for (var x2 = x + 1; x2 < GRID.length && GRID[x2][y2] !== undefined; x2++) {
+                lenX++;
+                rXbound = x2;
             }
-            var lXBound;
-            for (var x2 = x - 1; x2 >= 0; x2--) {
-                if (GRID[x2][y2] === undefined) {
-                    lXBound = x2 + 1;
-                    break;
-                } else {
-                    lenX++;
-                }
+
+            var lXBound = x;
+            for (var x2 = x - 1; x2 >= 0 && GRID[x2][y2] !== undefined; x2--) {
+                lenX++;
+                lXBound = x2;
             }
 
             if (disc != 0 && disc == lenX) {
@@ -326,6 +360,24 @@ function applyGravity() {
     }
 }
 
+function drawLevelIndicators() {
+    LEVEL_INDICATORS = [];
+    for (var i = 0; i < MOVES_PER_LEVEL; i++) {
+        var circ = PAPER.circle(i * 24 + 10, 730, 10);
+        circ.attr("fill", "white");
+        circ.attr("stroke", "none");
+        LEVEL_INDICATORS.push(circ);
+    }
+
+
+    LEVEL_TEXT = PAPER.text(65, 770, "Level 1").attr({
+        "font-size": 40,
+        "font-family": "Helvetica",
+        "font-weight": 300,
+        "fill": "white"
+    });
+}
+
 /*************
  * UTILITIES *
  *************/
@@ -368,7 +420,6 @@ function eachBgSlot(update, callback) {
         Object.keys(update[1]).forEach(function(k) {
             var arr = unpackCoordinatePair(parseInt(k));
             var x1 = arr[0], y1 = arr[1], x2 = arr[2], y2 = arr[3];
-            console.log(x1, y1, x2, y2);
             for (var x = x1; x <= x2; x++) {
                 for (var y = y1; y <= y2; y++) {
                     callback(BACKGROUND_SLOTS[x][y]);
@@ -401,6 +452,7 @@ PAPER.rect(0, 0, 700, 700).attr('fill', 'black');
 
 function game() {
     createGrid();
+    drawLevelIndicators();
     simulateGrid();
     drawBoard();
     drawDiscs();
