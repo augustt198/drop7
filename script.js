@@ -21,8 +21,6 @@ var CURRENT_COLUMN = 3;
 
 var CHAIN_TEXT;
 
-const DISC_X_INC = 101;
-
 const COLOR_MAP = {
     1: "#69bd45",
     2: "#efe609",
@@ -86,7 +84,7 @@ function columnClick(column, index) {
     GRID[index][y] = dropped.number;
     IMAGES[index][y] = dropped.image;
 
-    dropped.image.animate({x: 101 * index, y: 101 * y}, 200 + 50 * y, "easeIn", function() {
+    dropped.image.animate({x: 100 * index + 3, y: 100 * y + 3}, 200 + 50 * y, "easeIn", function() {
         drawUpdates(1, function() {
             if (CHAIN_TEXT !== undefined) {
                 CHAIN_TEXT.animate({opacity: 0}, 2500, CHAIN_TEXT.remove);
@@ -226,7 +224,7 @@ function drawDiscs() {
             var slot = GRID[x][y];
             if (slot !== undefined) {
                 var url = "svg/disc" + (slot + 1) + ".svg";
-                var image = PAPER.image(url, 100.8 * x, 100.5 * y, 95, 95);
+                var image = PAPER.image(url, 100 * x + 3, 100 * y + 3, 95, 95);
                 IMAGES[x][y] = image;
             }
         }
@@ -235,7 +233,7 @@ function drawDiscs() {
 
 function addDisc() {
     var number  = Math.floor(Math.random() * 7);
-    var xPos    = CURRENT_COLUMN * DISC_X_INC;
+    var xPos    = CURRENT_COLUMN * 100 + 3;
 
     var imageURL = "svg/disc" + (number + 1) + ".svg";
     var image    = PAPER.image(imageURL, xPos, -100, 95, 95);
@@ -285,13 +283,13 @@ function getDisappearing() {
             continue;
 
         for (var y2 = GRID.length - 1; y2 >= y; y2--) {
-            var disc = GRID[x][y2];
-            if (disc == 0 && testDisc1Disappearing(GRID, x, y2)) {
+            var num = GRID[x][y2];
+            if (num == 0 && testDisc1Disappearing(GRID, x, y2)) {
                 var range = packCoordinatePair(x, y2, x, y2);
                 ranges[range] = true;
                 var disc = packCoordinate(x, y2);
                 discs[disc] = true;
-            } else if (disc == 6 - y) {
+            } else if (num == 6 - y) {
                 var range = packCoordinatePair(x, y, x, GRID[0].length - 1);
                 ranges[range] = true;
                 var disc = packCoordinate(x, y2);
@@ -312,7 +310,7 @@ function getDisappearing() {
                 lXBound = x2;
             }
 
-            if (disc != 0 && disc == lenX) {
+            if (num != 0 && num == lenX) {
                 var range = packCoordinatePair(lXBound, y2, rXbound, y2);
                 ranges[range] = true;
                 var disc = packCoordinate(x, y2);
