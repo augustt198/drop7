@@ -84,30 +84,30 @@ function columnClick(column, index) {
     GRID[index][y] = dropped.number;
     IMAGES[index][y] = dropped.image;
 
-    dropped.image.animate({x: 100 * index + 3, y: 100 * y + 3}, 200 + 50 * y, "easeIn", function() {
-        drawUpdates(1, function() {
-            if (CHAIN_TEXT !== undefined) {
-                CHAIN_TEXT.animate({opacity: 0}, 2500, CHAIN_TEXT.remove);
-                CHAIN_TEXT = undefined;
-            }
+    dropped.image.animate(
+        {x: 100 * index + 3, y: 100 * y + 3}, 200 + 50 * y,
+        "easeIn",
+        startMove
+    );
+}
 
+function startMove() {
+    MOVES_LEFT--;
+    LEVEL_INDICATORS[MOVES_LEFT].attr("fill", "#808080");
+    drawUpdates(1, function() {
+        if (CHAIN_TEXT !== undefined) {
+            CHAIN_TEXT.animate({opacity: 0}, 2500, CHAIN_TEXT.remove);
+            CHAIN_TEXT = undefined;
+        }
+
+        chainDelay(function() {
             addDisc();
 
-            return; // TODO fix levels
-            MOVES_LEFT--;
-
             if (MOVES_LEFT < 1) {
-                for (var x = 0; x < GRID.length; x++) {
-                    for (var y = 0; y < GRID[x].length; y++) {
-                        if (IMAGES[x][y] !== undefined) {
-                            IMAGES[x][y].attr("y", IMAGES[x][y].attr("y") - 100.5);
-                        }
-                    }
-                }
+                levelUp();
             }
+        }, 250);
 
-            LEVEL_INDICATORS[MOVES_LEFT].attr("fill", "#808080");
-        });
     });
 }
 
@@ -356,6 +356,48 @@ function applyGravity() {
             }
         }
     }
+}
+
+function levelUp() {
+    MOVES_LEFT = MOVES_PER_LEVEL;
+    CURRENT_LEVEL++;
+
+    LEVEL_TEXT.attr("text", "Level " + CURRENT_LEVEL);
+    LEVEL_INDICATORS.forEach(function(e) {
+        e.attr("fill", "white");
+    })
+
+    var gameOver = false;
+    for (var x = 0; x < GRID.length; x++) {
+        for (var y = 0; y < GRID[x].length; y++) {
+            var img = IMAGES[x][y];
+            if (img !== undefined) {
+                if (y == 0)
+                    gameOver = true;
+
+                img.attr('y', img.attr('y') - 100);
+            }
+        }
+        PAPER.image("svg/disc_gray.svg", 100 * x + 3, 100 * 6 + 3, 95, 95);
+    }
+
+    if (gameOver)
+        return gameOver;
+
+    for (var x = 0; x < GRID.length; x++) {
+        for (var y = 0; y < GRID[x].length; y++) {
+            var img = IMAGES[x][y];
+            IMAGES[x][y] = undefined;
+            IMAGES[x][y - 1] = IMAGES[x][y];
+
+            var num = GRID[x][y];
+            GRID[x][y] = undefined;
+            GRID[x][y - 1] = num;
+        }
+        GRID[x][6] = 7;
+    }
+
+    startMove();
 }
 
 function drawLevelIndicators() {
