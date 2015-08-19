@@ -132,9 +132,27 @@ function drawUpdates(chainLen, finishCallback) {
     }, 700);
 
     chainDelay(function() {
+        var effected = {};
         Object.keys(update[0]).forEach(function(k) {
             var pair = unpackCoordinate(parseInt(k));
             var x = pair[0], y = pair[1];
+
+            function affect(nx, ny) {
+                var coord = packCoordinate(nx, ny);
+                if (effected[coord] === undefined)
+                    effected[coord] = 1;
+                else
+                    effected[coord]++;
+            }
+
+            if (GRID[x - 1] && GRID[x - 1][y] >= 7)
+                affect(x - 1, y);
+            if (GRID[x + 1] && GRID[x + 1][y] >= 7)
+                affect(x + 1, y);
+            if (GRID[x][y - 1] >= 7)
+                affect(x, y - 1);
+            if (GRID[x][y + 1] >= 7)
+                affect(x, y + 1);
 
             SCORE += score;
             document.getElementById("score").textContent = SCORE;
@@ -170,7 +188,74 @@ function drawUpdates(chainLen, finishCallback) {
                 }
             }
         });
+        Object.keys(effected).forEach(function(k) {
+            var coord = unpackCoordinate(parseInt(k));
+            var x = coord[0], y = coord[1];
+            var changes = effected[k];
+
+            var newVal = changes + GRID[x][y];
+            if (newVal == 8) {
+                IMAGES[x][y].attr("src", "svg/disc_cracked.svg");
+                GRID[x][y] = 8;
+            } else if (newVal > 8) {
+                var disc = Math.floor(Math.random() * 7);
+                IMAGES[x][y].attr("src", "svg/disc" + (disc + 1) + ".svg");
+                GRID[x][y] = disc;
+            }
+            console.log("Changes: " + changes);
+            console.log("CHANGE @ GRID", GRID[x][y]);
+
+            console.log("affected");
+            animateExplosion(x, y);
+        });
     }, 300);
+}
+
+function animateExplosion(x, y) {
+    var particles = [];
+    for (var i = 0; i <= 6; i++) {
+        var yOffset = y * 100 + 25;
+        var sign  = Math.random() >= 0.5 ? 1 : -1;
+        var ceoff = (1 / 18) + (Math.random() / 10);
+        var box   = PAPER.rect(x * 100 + 25, yOffset + Math.pow(ceoff * 70, 2), 15, 15)
+        box.attr({fill: "#5e5e5e", stroke: "none"});
+        box.transform("r" + Raphael.deg(Math.atan(2 * ceoff * ceoff * (counter - 70))));
+
+        var obj = {
+            yOffset: yOffset,
+            sign:    sign,
+            ceoff:   ceoff,
+            box:     box
+        };
+        
+        particles.push(obj);
+    }
+
+    var counter = 0;
+    var id;
+
+    id = setInterval(function() {
+        if (counter >= 500) {
+            clearInterval(id);
+            return;
+        }
+
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+
+            var y2 = Math.pow(p.ceoff * (counter - 70), 2);
+            var deriv = 2 * p.ceoff * p.ceoff * (counter - 70);
+            var angle = Raphael.deg(Math.atan(deriv));
+            if (p.sign == -1) angle += 45;
+            p.box.attr({
+                x: p.sign * counter + x * 100 + 25,
+                y: y2 + p.yOffset,
+                opacity: p.box.attr("opacity") - 0.02
+            });
+            p.box.transform("r" + angle);
+        }
+        counter += 8;
+    }, 15);
 }
 
 function drawBoard() {
