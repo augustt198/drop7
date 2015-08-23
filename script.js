@@ -102,7 +102,9 @@ function startMove() {
 
         chainDelay(function() {
             if (MOVES_LEFT < 1) {
-                levelUp();
+                if (levelUp()) {
+                    alert("Game over");
+                }
             } else {
                 addDisc();
             }
@@ -170,9 +172,13 @@ function drawUpdates(chainLen, finishCallback) {
             });
 
             GRID[x][y] = undefined;
-            IMAGES[x][y].animate({transform: 's1.1'}, 100);
+            var image = IMAGES[x][y];
+            IMAGES[x][y] = undefined;
+            image.animate({transform: 's1.1'}, 100);
             chainDelay(function() {
-                IMAGES[x][y].animate({transform: 's0', opacity: 0}, 500);
+                image.animate({transform: 's0', opacity: 0}, 500, function() {
+                    image.remove();
+                });
             }, 180);
 
             if (chainLen > 1) {
