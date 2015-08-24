@@ -91,10 +91,11 @@ function columnClick(column, index) {
     );
 }
 
-function startMove() {
+function startMove(startLen) {
+    startLen = startLen || 1;
     MOVES_LEFT--;
     LEVEL_INDICATORS[MOVES_LEFT].attr("fill", "#808080");
-    drawUpdates(1, function() {
+    drawUpdates(startLen, function(chainLen) {
         if (CHAIN_TEXT !== undefined) {
             CHAIN_TEXT.animate({opacity: 0}, 2500, CHAIN_TEXT.remove);
             CHAIN_TEXT = undefined;
@@ -102,7 +103,7 @@ function startMove() {
 
         chainDelay(function() {
             if (MOVES_LEFT < 1) {
-                if (levelUp()) {
+                if (levelUp(chainLen)) {
                     alert("Game over");
                 }
             } else {
@@ -117,7 +118,7 @@ function drawUpdates(chainLen, finishCallback) {
     var update = getDisappearing();
     console.log(update);
     if (Object.keys(update[1]).length < 1) {
-        finishCallback();
+        finishCallback(chainLen);
         return;
     }
 
@@ -449,7 +450,7 @@ function applyGravity() {
     }
 }
 
-function levelUp() {
+function levelUp(chainLen) {
     MOVES_LEFT = MOVES_PER_LEVEL;
     CURRENT_LEVEL++;
 
@@ -491,7 +492,7 @@ function levelUp() {
     }
 
     setTimeout(function() {
-        startMove();
+        startMove(chainLen);
     }, 400);
 }
 
