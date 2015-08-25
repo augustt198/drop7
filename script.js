@@ -441,7 +441,7 @@ function applyGravity() {
                         IMAGES[x][y] = undefined;
                         IMAGES[x][y + offset] = img;
                         IMAGES[x][y + offset].animate(
-                            {y: 100.5 * (y + offset)}, 170 * offset
+                            {y: 100.5 * (y + offset)}, 170
                         );
                     }
                 }
