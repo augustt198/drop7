@@ -14,10 +14,13 @@ var SCORE = 0;
 
 var HARDCORE = true;
 var GRID;
+var BACKGROUND_COLUMNS;
 var BACKGROUND_SLOTS;
 var IMAGES;
 var CURRENT_DISC;
 var CURRENT_COLUMN = 3;
+
+var LEVEL_UP_BONUS = 17000;
 
 var CHAIN_TEXT;
 
@@ -104,14 +107,19 @@ function startMove(startLen) {
         chainDelay(function() {
             if (MOVES_LEFT < 1) {
                 if (levelUp(chainLen)) {
-                    alert("Game over");
+                    gameOver();
                 }
             } else {
                 addDisc();
             }
-        }, 250);
+        }, 500);
 
     });
+}
+
+function updateScore(newScore) {
+    SCORE = newScore;
+    document.getElementById("score").textContent = SCORE.toLocaleString();
 }
 
 function drawUpdates(chainLen, finishCallback) {
@@ -157,8 +165,7 @@ function drawUpdates(chainLen, finishCallback) {
             if (GRID[x][y + 1] >= 7)
                 affect(x, y + 1);
 
-            SCORE += score;
-            document.getElementById("score").textContent = SCORE;
+            updateScore(SCORE + score);
 
             var text = PAPER.text(x * 101 + 50, y * 101, "+" + score);
             text.attr({
@@ -168,7 +175,7 @@ function drawUpdates(chainLen, finishCallback) {
                 "fill": COLOR_MAP[GRID[x][y] + 1]
             });
 
-            text.animate({y: 101 * y - 150, opacity: 0}, 2500, function() {
+            text.animate({y: 100 * y - 300, opacity: 0}, 2500, "easeIn", function() {
                 text.remove();
             });
 
@@ -244,6 +251,9 @@ function animateExplosion(x, y) {
     id = setInterval(function() {
         if (counter >= 500) {
             clearInterval(id);
+            for (var i = 0; i < particles.length; i++) {
+                particles[i].box.remove();
+            }
             return;
         }
 
@@ -265,8 +275,38 @@ function animateExplosion(x, y) {
     }, 15);
 }
 
+// handle arrow keys
+document.onkeydown = function(e) {
+    e = e || window.event;
+
+    if (e.keyCode == 37) {
+        // left
+        if (CURRENT_COLUMN > 0) {
+            var oldCol = BACKGROUND_COLUMNS[CURRENT_COLUMN];
+            columnHoverOut(oldCol, CURRENT_COLUMN);
+            CURRENT_COLUMN -= 1;
+            var col = BACKGROUND_COLUMNS[CURRENT_COLUMN];
+            columnHoverIn(col, CURRENT_COLUMN);
+        }
+    } else if (e.keyCode == 39) {
+        // right
+        if (CURRENT_COLUMN < 6) {
+            var oldCol = BACKGROUND_COLUMNS[CURRENT_COLUMN];
+            columnHoverOut(oldCol, CURRENT_COLUMN);
+            CURRENT_COLUMN += 1;
+            var col = BACKGROUND_COLUMNS[CURRENT_COLUMN];
+            columnHoverIn(col, CURRENT_COLUMN);
+        }
+    } else if (e.keyCode == 13 || e.keyCode == 32 || e.keyCode == 40) {
+        // space, enter, or down
+        var col = BACKGROUND_COLUMNS[CURRENT_COLUMN];
+        columnClick(col, CURRENT_COLUMN);
+    }
+}
+
 function drawBoard() {
     BACKGROUND_SLOTS = new Array(7);
+    BACKGROUND_COLUMNS = new Array(7);
     for (var i = 0; i <= 6; i++) {
         col = PAPER.rect(i * 100, 0, 100, 700)
             .attr('fill', '#000')
@@ -284,6 +324,8 @@ function drawBoard() {
                 columnClick(c, idx);
             })
         })(col, i);
+
+        BACKGROUND_COLUMNS[i] = col;
 
         BACKGROUND_SLOTS[i] = new Array(7);
         for (var j = 0; j <= 6; j++) {
@@ -459,14 +501,16 @@ function levelUp(chainLen) {
         e.attr("fill", "white");
     })
 
-    var gameOver  = false;
+    updateScore(SCORE + LEVEL_UP_BONUS);
+
+    var isGameOver  = false;
     var grayDiscs = new Array(GRID.length);
     for (var x = 0; x < GRID.length; x++) {
         for (var y = 0; y < GRID[x].length; y++) {
             var img = IMAGES[x][y];
             if (img !== undefined) {
                 if (y == 0)
-                    gameOver = true;
+                    isGameOver = true;
 
                 img.attr('y', img.attr('y') - 100);
             }
@@ -474,8 +518,8 @@ function levelUp(chainLen) {
         grayDiscs[x] = PAPER.image("svg/disc_gray.svg", 100 * x + 3, 100 * 6 + 3, 95, 95);
     }
 
-    if (gameOver)
-        return gameOver;
+    if (isGameOver)
+        return isGameOver;
 
     for (var x = 0; x < GRID.length; x++) {
         for (var y = 0; y < GRID[x].length; y++) {
@@ -506,11 +550,12 @@ function drawLevelIndicators() {
     }
 
 
-    LEVEL_TEXT = PAPER.text(65, 770, "Level 1").attr({
+    LEVEL_TEXT = PAPER.text(0, 770, "Level 1").attr({
         "font-size": 40,
         "font-family": "Helvetica",
         "font-weight": 300,
-        "fill": "white"
+        "fill": "white",
+        "text-anchor": "start"
     });
 }
 
@@ -582,6 +627,34 @@ function simulateGrid() {
 
         discs = getDisappearing()[0];
     }
+}
+
+function gameOver() {
+    var gameOverImg = PAPER.image("svg/gameover.svg", 0,0, '100%', '100%')
+                        .attr('y', 100)
+                        .attr('clip-rect', '0 0 700px 700px');
+
+    chainDelay(function() {
+        var bg = PAPER.rect(0, 0, 700, 700);
+        bg.attr('fill', '#5e5e5e').attr('opacity', 0);
+        bg.animate({opacity: 1.0}, 250);
+        gameOverImg.toFront();
+    }, 500);
+
+    var topten = window.localStorage.getItem("topten");
+    if (topten === null) {
+        var scoresStr = SCORE.toString();
+    } else {
+        var scores = topten.split(",").map(function(x) { return parseInt(x); });
+        scores = scores.filter(Number.isInteger);
+        scores.push(SCORE);
+        var cmpFn = function(a, b) { return b - a; }; // descending
+        scores.sort(cmpFn);
+        scores.splice(10);
+        var scoresStr = scores.join(",");
+    }
+    window.localStorage.setItem("topten", scoresStr);
+    console.log("scores", scoresStr); 
 }
 
 PAPER.rect(0, 0, 700, 700).attr('fill', 'black');
